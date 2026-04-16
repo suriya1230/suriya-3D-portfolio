@@ -1,0 +1,134 @@
+{
+  "about": {
+  "name": "Suriya",
+  "title": "AI Engineer & Researcher",
+  "tagline": "Building intelligent systems that learn, adapt, and redefine the future.",
+  "subtitle": "AI Engineer · Full-Stack Developer · Data Analyst",
+  "bio": "I am an AI Engineer and Researcher with over one year of experience as a Data Analyst, specializing in extracting insights from complex data and building intelligent systems. I design and develop AI-driven solutions that solve real-world problems using machine learning, deep learning, and modern full-stack technologies. My work focuses on creating scalable, efficient, and impactful systems that bridge the gap between data, intelligence, and innovation. I am passionate about advancing AI technologies and contributing to the future of intelligent automation like Creating AGI.",
+  "location": "Chennai, India"
+},
+
+  "contact": {
+    "phone": {
+      "value": "+91 9360830989",
+      "icon": "phone",
+      "link": "tel:+919360830989"
+    },
+    "email": {
+      "value": "ssuriyas380@gmail.com",
+      "icon": "mail",
+      "link": "mailto:ssuriyas380@gmail.com"
+    },
+    "linkedin": {
+      "value": "LinkedIn",
+      "icon": "linkedin",
+      "link": "https://www.linkedin.com/in/suriya-s-768b91282"
+    },
+    "github": {
+      "value": "GitHub",
+      "icon": "github",
+      "link": "https://github.com/suriya1230"
+    },
+    "instagram": {
+      "value": "Instagram",
+      "icon": "instagram",
+      "link": "https://www.instagram.com/__the_mephisto?igsh=Njhqb3ZhNzBtMDUz"
+    }
+  },
+
+  "education": [
+    {
+      "title": "Master of Computer Applications",
+      "institution": "Hindusthan College of Arts and Science, Coimbatore",
+      "year": "2024",
+      "gpa": "7.6 / 10",
+      "description": "Focused on software development, AI, and modern computing systems."
+    },
+    {
+      "title": "Bachelor of Computer Applications",
+      "institution": "Government Arts and Science College, Dharmapuri",
+      "year": "2022",
+      "gpa": "7.5 / 10",
+      "description": "Strong foundation in programming and core computer science."
+    }
+  ],
+
+  "projects": [
+    {
+      "title": "VideoMind AI",
+      "tech": "Flask · Whisper · LLaMA · yt-dlp",
+      "description": "AI system for video transcription, summarization, translation, and Q&A.",
+      "link": "https://github.com/suriya1230/VideoMind_AI"
+    },
+    {
+      "title": "Loan-AI",
+      "tech": "React · Flask · ML · SHAP · LIME",
+      "description": "AI-based loan approval system with explainable predictions.",
+      "link": "https://github.com/suriya1230/Loan-AI"
+    },
+    {
+      "title": "AI Cyber Defense System",
+      "tech": "Python · ML · Cybersecurity",
+      "description": "Autonomous AI system for detecting and defending cyber threats.",
+      "link": "https://github.com/suriya1230/Ai-Cyber-Defence-"
+    },
+    {
+      "title": "Resume Score Checker",
+      "tech": "Python · NLP",
+      "description": "AI tool for analyzing resumes.",
+      "link": "https://github.com/suriya1230/Resume-score-Checker"
+    },
+    {
+      "title": "Sentiment Analysis",
+      "tech": "Python · NLP",
+      "description": "Text sentiment classification system.",
+      "link": "https://github.com/suriya1230/Sentiment_Analysis"
+    }
+  ],
+
+  "skills": [
+    { "name": "Python", "level": 92 },
+    { "name": "Machine Learning", "level": 90 },
+    { "name": "Deep Learning", "level": 88 },
+    { "name": "Transformers & LLMs", "level": 90 },
+    { "name": "LangChain & LangGraph", "level": 88 },
+    { "name": "SQL", "level": 85 },
+    { "name": "Flask", "level": 86 },
+    { "name": "React", "level": 84 },
+    { "name": "NLP", "level": 88 },
+    { "name": "Computer Vision", "level": 85 },
+    { "name": "Generative AI", "level": 90 },
+    { "name": "AI Agents", "level": 92 }
+  ],
+
+  "certificates": [
+    {
+      "title": "Data Analyst Certification",
+      "issuer": "Izon Innovative Pvt Ltd",
+      "year": "2024"
+    },
+    {
+      "title": "Ethical Hacking Essentials",
+      "issuer": "EC-Council",
+      "year": "2023"
+    },
+    {
+      "title": "Python Certification",
+      "issuer": "Great Learning",
+      "year": "2023"
+    },
+    {
+      "title": "Machine Learning Certification",
+      "issuer": "Pantech Solutions",
+      "year": "2024"
+    }
+  ],
+
+  "achievements": [
+    {
+      "title": "Published Research Paper",
+      "description": "Machine Learning Techniques for 5G and beyond using PSO algorithm.",
+      "year": "2024"
+    }
+  ]
+}
