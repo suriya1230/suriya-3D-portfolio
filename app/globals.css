@@ -111,3 +111,25 @@ body {
 @keyframes scanline { from{transform:translateY(-100%)} to{transform:translateY(100vh)} }
 @keyframes cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }
 .cursor-blink { animation: cursor-blink 1s step-end infinite; }
+/* ── Admin input fields ── */
+.input-field {
+  background: hsl(0 0% 10%);
+  color: hsl(0 0% 92%);
+  border: 1px solid hsl(0 0% 22%);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'Sora', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 400;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.input-field::placeholder {
+  color: hsl(0 0% 38%);
+}
+.input-field:focus {
+  border-color: rgba(201, 168, 76, 0.6);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.1);
+}
