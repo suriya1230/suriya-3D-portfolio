@@ -1,7 +1,6 @@
 // components/portfolio/ManualPortfolio.js
 'use client';
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import { fetchRTDB } from '@/lib/rtdb';
 import Navbar from './Navbar';
 import HeroSection from './HeroSection';
@@ -16,12 +15,8 @@ import FeedbackWidget from '@/components/ui/FeedbackWidget';
 
 export default function ManualPortfolio({ visitor }) {
   const [data, setData] = useState({
-    about: [],
-    education: [],
-    projects: [],
-    certificates: [],
-    skills: [],
-    achievements: [],
+    about: [], education: [], projects: [],
+    certificates: [], skills: [], achievements: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -29,12 +24,8 @@ export default function ManualPortfolio({ visitor }) {
     const loadAll = async () => {
       try {
         const [about, education, projects, certificates, skills, achievements] = await Promise.all([
-          fetchRTDB('about'),
-          fetchRTDB('education'),
-          fetchRTDB('projects'),
-          fetchRTDB('certificates'),
-          fetchRTDB('skills'),
-          fetchRTDB('achievements'),
+          fetchRTDB('about'), fetchRTDB('education'), fetchRTDB('projects'),
+          fetchRTDB('certificates'), fetchRTDB('skills'), fetchRTDB('achievements'),
         ]);
         setData({ about, education, projects, certificates, skills, achievements });
       } catch (e) {
@@ -54,12 +45,9 @@ export default function ManualPortfolio({ visitor }) {
             Loading Portfolio...
           </div>
           <div className="flex gap-1 justify-center">
-            {[0,1,2].map(i => (
-              <div
-                key={i}
-                className="w-2 h-2 rounded-full bg-gold"
-                style={{ animation: `glowPulse 1s ease-in-out infinite`, animationDelay: `${i * 0.2}s` }}
-              />
+            {[0, 1, 2].map(i => (
+              <div key={i} className="w-2 h-2 rounded-full"
+                style={{ background: 'var(--gold)', animation: 'glowPulse 1s ease-in-out infinite', animationDelay: `${i * 0.2}s` }} />
             ))}
           </div>
         </div>
@@ -78,19 +66,11 @@ export default function ManualPortfolio({ visitor }) {
       <SkillsSection skills={data.skills} />
       <AchievementsSection achievements={data.achievements} />
       <ContactSection />
-
       <FeedbackWidget />
 
       {/* Back to top */}
-      <a
-        href="#top"
-        className="fixed bottom-8 right-8 w-10 h-10 rounded-full flex items-center justify-center text-sm z-50"
-        style={{
-          background: 'rgba(201,168,76,0.15)',
-          border: '1px solid rgba(201,168,76,0.3)',
-          color: 'var(--gold)',
-        }}
-      >
+      <a href="#top" className="fixed bottom-6 right-6 w-10 h-10 rounded-full flex items-center justify-center text-sm z-50"
+        style={{ background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.3)', color: 'var(--gold)' }}>
         ↑
       </a>
     </div>

@@ -2,138 +2,85 @@
 'use client';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { useResponsive } from '@/hooks/useResponsive';
 
 export default function ModeSelector({ visitor, onSelect }) {
   const [hovered, setHovered] = useState(null);
+  const { isMobile } = useResponsive();
 
   const modes = [
     {
-      id: 'manual',
-      label: 'Manual Mode',
-      subtitle: 'Classic Portfolio',
+      id: 'manual', label: 'Manual Mode', subtitle: 'Classic Portfolio',
       description: 'Browse the portfolio at your own pace. Navigate sections freely — About, Projects, Skills, and more.',
-      icon: '⬡',
-      tag: 'Standard',
-      color: 'rgba(255,255,255,0.08)',
-      accentColor: 'rgba(255,255,255,0.5)',
+      icon: '⬡', tag: 'Standard',
+      color: 'rgba(255,255,255,0.08)', accentColor: 'rgba(255,255,255,0.5)',
     },
     {
-      id: 'agentic',
-      label: 'Agentic Mode',
-      subtitle: '3D Cinematic AI Experience',
+      id: 'agentic', label: 'Agentic Mode', subtitle: '3D Cinematic AI Experience',
       description: 'Let Jarvis — my AI agent — guide you through a cinematic 3D world. Immersive. Unforgettable.',
-      icon: '◈',
-      tag: 'AI-Powered',
-      color: 'rgba(201,168,76,0.06)',
-      accentColor: 'var(--gold)',
-      recommended: true,
+      icon: '◈', tag: 'AI-Powered',
+      color: 'rgba(201,168,76,0.06)', accentColor: 'var(--gold)', recommended: true,
     },
   ];
 
   return (
-    <div className="min-h-screen bg-void flex items-center justify-center p-6 relative">
-      <div
-        className="absolute inset-0"
-        style={{ background: 'radial-gradient(ellipse at 50% 40%, rgba(201,168,76,0.05) 0%, transparent 65%)' }}
-      />
+    <div className="min-h-screen bg-void flex items-center justify-center relative"
+      style={{ padding: isMobile ? '20px 16px' : '24px' }}>
+      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 40%, rgba(201,168,76,0.05) 0%, transparent 65%)' }} />
 
-      <div className="relative z-10 w-full max-w-4xl">
+      <div className="relative z-10 w-full" style={{ maxWidth: isMobile ? 480 : 896 }}>
         {/* Greeting */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="text-center mb-14"
-        >
-          <div className="text-xs tracking-[0.35em] uppercase mb-4 text-white/30" style={{ fontFamily: 'var(--font-mono)' }}>
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}
+          className="text-center" style={{ marginBottom: isMobile ? 32 : 56 }}>
+          <div className="text-xs tracking-[0.35em] uppercase mb-3 text-white/30" style={{ fontFamily: 'var(--font-mono)' }}>
             Welcome back
           </div>
-          <h1 className="text-5xl md:text-6xl font-light mb-4" style={{ fontFamily: 'var(--font-display)', color: '#f0ebe0' }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', color: '#f0ebe0', fontWeight: 300, fontSize: isMobile ? 'clamp(2rem, 9vw, 2.8rem)' : 'clamp(2.5rem, 6vw, 4rem)', marginBottom: 12 }}>
             Hello, <span className="gold-text">{visitor.name || 'Visitor'}</span>
           </h1>
-          <p className="text-white/40 text-lg">
+          <p className="text-white/40" style={{ fontSize: isMobile ? '0.9rem' : '1.1rem' }}>
             {visitor.company ? `from ${visitor.company} — ` : ''}
             How would you like to experience this portfolio?
           </p>
         </motion.div>
 
         {/* Mode cards */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 14 : 24 }}>
           {modes.map((mode, i) => (
-            <motion.div
-              key={mode.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
+            <motion.div key={mode.id}
+              initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: i * 0.15 }}
-              onMouseEnter={() => setHovered(mode.id)}
-              onMouseLeave={() => setHovered(null)}
+              onMouseEnter={() => setHovered(mode.id)} onMouseLeave={() => setHovered(null)}
               onClick={() => onSelect(mode.id)}
-              className="relative cursor-pointer rounded-2xl p-8 transition-all duration-500"
               style={{
+                position: 'relative', cursor: 'pointer', borderRadius: isMobile ? 16 : 20,
+                padding: isMobile ? '24px 22px' : '32px',
                 background: hovered === mode.id ? (mode.id === 'agentic' ? 'rgba(201,168,76,0.08)' : 'rgba(255,255,255,0.06)') : mode.color,
                 border: `1px solid ${hovered === mode.id ? mode.accentColor : 'rgba(255,255,255,0.07)'}`,
-                transform: hovered === mode.id ? 'translateY(-4px)' : 'none',
+                transform: hovered === mode.id ? 'translateY(-3px)' : 'none',
                 boxShadow: hovered === mode.id && mode.id === 'agentic' ? '0 20px 60px rgba(201,168,76,0.15)' : '0 4px 20px rgba(0,0,0,0.3)',
-              }}
-            >
+                transition: 'all 0.4s',
+              }}>
               {mode.recommended && (
-                <div
-                  className="absolute top-4 right-4 text-xs px-3 py-1 rounded-full"
-                  style={{
-                    background: 'rgba(201,168,76,0.15)',
-                    border: '1px solid rgba(201,168,76,0.3)',
-                    color: 'var(--gold)',
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: '0.65rem',
-                    letterSpacing: '0.1em',
-                  }}
-                >
-                  RECOMMENDED
-                </div>
+                <div style={{
+                  position: 'absolute', top: 14, right: 14,
+                  fontSize: '0.6rem', padding: '4px 10px', borderRadius: 100,
+                  background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.3)',
+                  color: 'var(--gold)', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em',
+                }}>RECOMMENDED</div>
               )}
-
-              <div
-                className="text-5xl mb-5 transition-transform duration-300"
-                style={{
-                  color: mode.accentColor,
-                  transform: hovered === mode.id ? 'scale(1.1)' : 'scale(1)',
-                  display: 'inline-block',
-                }}
-              >
+              <div style={{ fontSize: isMobile ? '2.5rem' : '3rem', color: mode.accentColor, marginBottom: isMobile ? 14 : 20, display: 'inline-block', transition: 'transform 0.3s', transform: hovered === mode.id ? 'scale(1.1)' : 'scale(1)' }}>
                 {mode.icon}
               </div>
-
-              <div className="mb-1">
-                <div className="text-xs tracking-widest uppercase mb-2" style={{ color: mode.accentColor, fontFamily: 'var(--font-mono)', fontSize: '0.65rem' }}>
-                  {mode.tag}
-                </div>
-                <h2 className="text-2xl font-medium mb-1" style={{ fontFamily: 'var(--font-display)', color: '#f0ebe0' }}>
-                  {mode.label}
-                </h2>
-                <div className="text-sm mb-4" style={{ color: mode.accentColor }}>
-                  {mode.subtitle}
-                </div>
-                <p className="text-sm text-white/40 leading-relaxed">
-                  {mode.description}
-                </p>
+              <div className="text-xs tracking-widest uppercase mb-2" style={{ color: mode.accentColor, fontFamily: 'var(--font-mono)', fontSize: '0.62rem' }}>{mode.tag}</div>
+              <h2 style={{ fontFamily: 'var(--font-display)', color: '#f0ebe0', fontSize: isMobile ? '1.4rem' : '1.7rem', fontWeight: 500, marginBottom: 4 }}>{mode.label}</h2>
+              <div style={{ fontSize: '0.85rem', color: mode.accentColor, marginBottom: 10 }}>{mode.subtitle}</div>
+              <p style={{ fontSize: isMobile ? '0.82rem' : '0.9rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.65 }}>{mode.description}</p>
+              <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.9rem', fontWeight: 500, color: hovered === mode.id ? mode.accentColor : 'rgba(255,255,255,0.25)', transition: 'color 0.3s' }}>
+                <span>{hovered === mode.id ? 'Tap to enter' : 'Choose this mode'}</span>
+                <span style={{ transform: hovered === mode.id ? 'translateX(4px)' : 'none', transition: 'transform 0.3s' }}>→</span>
               </div>
-
-              <div
-                className="mt-6 flex items-center gap-2 text-sm font-medium transition-all duration-300"
-                style={{ color: hovered === mode.id ? mode.accentColor : 'rgba(255,255,255,0.25)' }}
-              >
-                <span>{hovered === mode.id ? 'Click to enter' : 'Choose this mode'}</span>
-                <span className="transition-transform duration-300" style={{ transform: hovered === mode.id ? 'translateX(4px)' : 'none' }}>→</span>
-              </div>
-
-              {/* Bottom accent line on hover */}
-              <div
-                className="absolute bottom-0 left-8 right-8 h-px transition-opacity duration-300"
-                style={{
-                  background: `linear-gradient(to right, transparent, ${mode.accentColor}, transparent)`,
-                  opacity: hovered === mode.id ? 1 : 0,
-                }}
-              />
+              <div style={{ position: 'absolute', bottom: 0, left: '10%', right: '10%', height: 1, background: `linear-gradient(to right, transparent, ${mode.accentColor}, transparent)`, opacity: hovered === mode.id ? 1 : 0, transition: 'opacity 0.3s' }} />
             </motion.div>
           ))}
         </div>

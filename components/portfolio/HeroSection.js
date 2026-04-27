@@ -1,121 +1,130 @@
+// components/portfolio/HeroSection.js
 'use client';
 import { Suspense, lazy } from 'react';
+import { useResponsive } from '@/hooks/useResponsive';
 
 const Spline = lazy(() => import('@splinetool/react-spline'));
 
 export default function HeroSection({ about }) {
-  const name   = about?.name    || 'Suriya';
-  const role   = about?.tagline || 'AI Engineer & Researcher';
-  const bio    = about?.bio     || 'Building intelligent systems that learn, adapt, and solve real-world problems using advanced AI technologies.';
+  const { isMobile } = useResponsive();
+  const name = about?.name    || 'Suriya';
+  const role = about?.tagline || 'AI Engineer & Researcher';
+  const bio  = about?.bio     || 'Building intelligent systems that learn, adapt, and solve real-world problems using advanced AI technologies.';
+  const [firstName, ...rest] = name.split(' ');
+  const lastName = rest.join(' ');
 
   return (
     <section id="top" style={{
-      position: 'relative', minHeight: '100vh',
-      display: 'flex', alignItems: 'flex-end',
-      background: 'hsl(0 0% 8%)', overflow: 'hidden',
+      position: 'relative',
+      minHeight: '100svh',
+      display: 'flex',
+      alignItems: 'flex-end',
+      background: 'hsl(0 0% 8%)',
+      overflow: 'hidden',
     }}>
-      {/* ── SPLINE 3D BACKGROUND ── */}
-      <div style={{ position: 'absolute', inset: 0 }}>
-        <Suspense fallback={<div style={{ position: 'absolute', inset: 0, background: 'hsl(0 0% 8%)' }}/>}>
-          <Spline
-            scene="https://prod.spline.design/Slk6b8kz3LRlKiyk/scene.splinecode"
-            style={{ width: '100%', height: '100%' }}
-          />
-        </Suspense>
-      </div>
+      {/* 3D Background — desktop only */}
+      {!isMobile && (
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <Suspense fallback={<div style={{ position: 'absolute', inset: 0, background: 'hsl(0 0% 8%)' }} />}>
+            <Spline scene="https://prod.spline.design/Slk6b8kz3LRlKiyk/scene.splinecode"
+              style={{ width: '100%', height: '100%' }} />
+          </Suspense>
+        </div>
+      )}
 
-      {/* ── DARK OVERLAY ── */}
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 1, pointerEvents: 'none' }}/>
+      {/* Mobile gradient background */}
+      {isMobile && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: `
+            radial-gradient(ellipse at 80% 10%, hsl(119 99% 46% / 0.07) 0%, transparent 55%),
+            radial-gradient(ellipse at 10% 90%, hsl(240 60% 50% / 0.06) 0%, transparent 50%),
+            hsl(0 0% 8%)
+          `,
+        }} />
+      )}
 
-      {/* ── CONTENT — bottom-left ── */}
+      {/* Overlay */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        background: isMobile ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.35)',
+        zIndex: 1, pointerEvents: 'none',
+      }} />
+
+      {/* Content */}
       <div style={{
         position: 'relative', zIndex: 10, pointerEvents: 'none',
-        width: '100%', maxWidth: 680,
-        padding: '0 40px 48px',
+        width: '100%',
+        maxWidth: isMobile ? '100%' : 680,
+        padding: isMobile ? '0 22px 56px' : '0 40px 48px',
       }}>
         {/* Role badge */}
-        <div className="opacity-0 animate-fade-up" style={{ animationDelay: '0.1s', marginBottom: 16 }}>
+        <div className="opacity-0 animate-fade-up" style={{ animationDelay: '0.1s', marginBottom: 14 }}>
           <span style={{
-            fontFamily: "'Sora', sans-serif", fontSize: '0.65rem', fontWeight: 500,
-            letterSpacing: '0.25em', textTransform: 'uppercase',
+            fontFamily: "'Sora', sans-serif",
+            fontSize: isMobile ? '0.58rem' : '0.65rem',
+            fontWeight: 500, letterSpacing: '0.22em', textTransform: 'uppercase',
             color: 'hsl(119 99% 46%)',
             border: '1px solid hsl(119 99% 46% / 0.35)',
             padding: '5px 14px', borderRadius: 4,
             background: 'hsl(119 99% 46% / 0.08)',
-          }}>
-            {role}
-          </span>
+          }}>{role}</span>
         </div>
 
-        {/* HUGE NAME */}
+        {/* Name */}
         <h1 className="opacity-0 animate-fade-up" style={{
           animationDelay: '0.2s',
           fontFamily: "'Sora', sans-serif",
-          fontSize: 'clamp(3rem, 8vw, 6rem)',
-          fontWeight: 700,
-          lineHeight: 1.05,
-          letterSpacing: '-0.04em',
-          color: 'hsl(0 0% 96%)',
-          marginBottom: 8,
-          textTransform: 'uppercase',
+          fontSize: isMobile ? 'clamp(3rem, 15vw, 5rem)' : 'clamp(3rem, 8vw, 6rem)',
+          fontWeight: 700, lineHeight: 1.05, letterSpacing: '-0.04em',
+          color: 'hsl(0 0% 96%)', marginBottom: 8, textTransform: 'uppercase',
         }}>
-          {name.split(' ')[0]}
-          {name.split(' ').length > 1 && (
-            <> <span style={{ color: 'hsl(119 99% 46%)' }}>{name.split(' ').slice(1).join(' ')}</span></>
-          )}
+          {firstName}
+          {lastName && <> <span style={{ color: 'hsl(119 99% 46%)' }}>{lastName}</span></>}
         </h1>
 
         {/* Subheading */}
         <p className="opacity-0 animate-fade-up" style={{
           animationDelay: '0.4s',
           fontFamily: "'Sora', sans-serif",
-          fontSize: 'clamp(1.1rem, 2.5vw, 1.75rem)',
-          fontWeight: 300,
-          color: 'hsl(0 0% 96% / 0.8)',
-          marginBottom: 16,
-          lineHeight: 1.4,
-        }}>
-          Building intelligence that matters.
-        </p>
+          fontSize: isMobile ? '1.1rem' : 'clamp(1.1rem, 2.5vw, 1.75rem)',
+          fontWeight: 300, color: 'hsl(0 0% 96% / 0.8)', marginBottom: 14, lineHeight: 1.4,
+        }}>Building intelligence that matters.</p>
 
-        {/* Description */}
+        {/* Bio */}
         <p className="opacity-0 animate-fade-up" style={{
           animationDelay: '0.55s',
           fontFamily: "'Sora', sans-serif",
-          fontSize: 'clamp(0.85rem, 1.5vw, 1.05rem)',
-          fontWeight: 300,
-          color: 'hsl(0 0% 60%)',
-          marginBottom: 28,
-          lineHeight: 1.75,
-          maxWidth: 500,
+          fontSize: isMobile ? '0.84rem' : 'clamp(0.85rem, 1.5vw, 1.05rem)',
+          fontWeight: 300, color: 'hsl(0 0% 60%)',
+          marginBottom: isMobile ? 24 : 28, lineHeight: 1.75, maxWidth: 500,
         }}>
-          {bio.length > 180 ? bio.slice(0, 178) + '…' : bio}
+          {bio.length > 160 ? bio.slice(0, 158) + '…' : bio}
         </p>
 
         {/* CTAs */}
-        <div className="opacity-0 animate-fade-up" style={{ animationDelay: '0.7s', display: 'flex', flexWrap: 'wrap', gap: 12, pointerEvents: 'auto' }}>
+        <div className="opacity-0 animate-fade-up" style={{
+          animationDelay: '0.7s',
+          display: 'flex', flexWrap: 'wrap', gap: isMobile ? 10 : 12, pointerEvents: 'auto',
+        }}>
           <a href="#projects" style={{
-            fontFamily: "'Sora', sans-serif", fontSize: '0.8rem', fontWeight: 600,
-            background: 'hsl(119 99% 46%)', color: 'hsl(0 0% 4%)',
-            padding: '14px 28px', borderRadius: 4, textDecoration: 'none',
-            letterSpacing: '0.06em', transition: 'filter 0.2s, transform 0.15s', cursor: 'pointer',
+            fontFamily: "'Sora', sans-serif", fontSize: isMobile ? '0.78rem' : '0.8rem',
+            fontWeight: 600, background: 'hsl(119 99% 46%)', color: 'hsl(0 0% 4%)',
+            padding: isMobile ? '12px 22px' : '14px 28px', borderRadius: 4,
+            textDecoration: 'none', letterSpacing: '0.06em', transition: 'filter 0.2s',
           }}
-          onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.1)'}
-          onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}
-          onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
-          onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+            onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.1)'}
+            onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}>
             View My Work
           </a>
           <a href="#contact" style={{
-            fontFamily: "'Sora', sans-serif", fontSize: '0.8rem', fontWeight: 600,
-            background: '#ffffff', color: 'hsl(0 0% 8%)',
-            padding: '14px 28px', borderRadius: 4, textDecoration: 'none',
-            letterSpacing: '0.06em', transition: 'filter 0.2s, transform 0.15s', cursor: 'pointer',
+            fontFamily: "'Sora', sans-serif", fontSize: isMobile ? '0.78rem' : '0.8rem',
+            fontWeight: 600, background: '#ffffff', color: 'hsl(0 0% 8%)',
+            padding: isMobile ? '12px 22px' : '14px 28px', borderRadius: 4,
+            textDecoration: 'none', letterSpacing: '0.06em', transition: 'filter 0.2s',
           }}
-          onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.9)'}
-          onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}
-          onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
-          onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+            onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.9)'}
+            onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}>
             Get In Touch
           </a>
         </div>
@@ -123,22 +132,23 @@ export default function HeroSection({ about }) {
         {/* Trust line */}
         <p className="opacity-0 animate-fade-up" style={{
           animationDelay: '0.85s',
-          fontFamily: "'Sora', sans-serif", fontSize: '0.72rem', fontWeight: 300,
-          color: 'hsl(0 0% 60% / 0.55)',
-          marginTop: 24, letterSpacing: '0.06em',
+          fontFamily: "'Sora', sans-serif", fontSize: '0.7rem', fontWeight: 300,
+          color: 'hsl(0 0% 60% / 0.5)', marginTop: 20, letterSpacing: '0.06em',
         }}>
           AI Engineer · Chennai, India · Open to opportunities
         </p>
       </div>
 
-      {/* scroll hint */}
-      <div className="opacity-0 animate-fade-in" style={{
-        animationDelay: '1.4s', position: 'absolute', bottom: 36, right: 48,
-        zIndex: 10, display: 'flex', alignItems: 'center', gap: 10, pointerEvents: 'none',
-      }}>
-        <span style={{ fontFamily: "'Sora', sans-serif", fontSize: '0.6rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'hsl(0 0% 40%)' }}>Scroll</span>
-        <div style={{ width: 1, height: 40, background: 'linear-gradient(to bottom, hsl(0 0% 40%), transparent)' }}/>
-      </div>
+      {/* Scroll hint — desktop only */}
+      {!isMobile && (
+        <div className="opacity-0 animate-fade-in" style={{
+          animationDelay: '1.4s', position: 'absolute', bottom: 36, right: 48,
+          zIndex: 10, display: 'flex', alignItems: 'center', gap: 10, pointerEvents: 'none',
+        }}>
+          <span style={{ fontFamily: "'Sora', sans-serif", fontSize: '0.6rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'hsl(0 0% 40%)' }}>Scroll</span>
+          <div style={{ width: 1, height: 40, background: 'linear-gradient(to bottom, hsl(0 0% 40%), transparent)' }} />
+        </div>
+      )}
     </section>
   );
 }
