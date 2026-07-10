@@ -59,7 +59,13 @@ body {
 .animate-fade-in  { animation: fade-in  0.5s ease-out forwards; }
 
 /* ── SECTION DIVIDERS ── */
-.cm-section { padding: 6rem 0; border-top: 1px solid hsl(var(--border)); }
+/* content-visibility: auto lets the browser skip layout/paint work for
+   off-screen sections entirely — the single biggest lever for smooth
+   scrolling on a long page with many sections. contain-intrinsic-size is
+   a placeholder height so the scrollbar/anchor links don't jump before a
+   section has been measured for the first time. */
+.cm-section { padding: 6rem 0; border-top: 1px solid hsl(var(--border)); content-visibility: auto; contain-intrinsic-size: 0 900px; }
+.cv-auto { content-visibility: auto; contain-intrinsic-size: 0 900px; }
 .cm-num { font-family: 'Sora', monospace; font-size: 0.65rem; color: hsl(var(--muted-foreground)); letter-spacing: 0.2em; text-transform: uppercase; }
 .cm-display { font-family: 'Sora', sans-serif; font-weight: 300; color: hsl(var(--foreground)); line-height: 1.05; letter-spacing: -0.02em; }
 .cm-mono { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.12em; color: hsl(var(--muted-foreground)); }

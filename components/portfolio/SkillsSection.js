@@ -54,7 +54,7 @@ export default function SkillsSection({ skills }) {
   }, {});
 
   return (
-    <section id="skills" style={{ padding: isMobile ? '4rem 20px' : '7rem 64px', borderTop: '1px solid hsl(0 0% 15%)', background: 'hsl(0 0% 7%)' }}>
+    <section id="skills" className="cv-auto" style={{ padding: isMobile ? '4rem 20px' : '7rem 64px', borderTop: '1px solid hsl(0 0% 15%)', background: 'hsl(0 0% 7%)' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         <div style={{ marginBottom: isMobile ? 32 : 56 }}>
           <div className="cm-num" style={{ marginBottom: 16 }}>05 — Skills</div>

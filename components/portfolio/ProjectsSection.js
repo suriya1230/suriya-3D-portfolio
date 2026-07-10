@@ -26,7 +26,7 @@ export default function ProjectsSection({ projects }) {
   if (!projects?.length) return null;
 
   return (
-    <section id="projects" style={{ padding: isMobile ? '4rem 20px' : '7rem 64px', borderTop: '1px solid hsl(0 0% 15%)' }}>
+    <section id="projects" className="cv-auto" style={{ padding: isMobile ? '4rem 20px' : '7rem 64px', borderTop: '1px solid hsl(0 0% 15%)' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 40, flexWrap: 'wrap', gap: 12 }}>
@@ -59,7 +59,7 @@ export default function ProjectsSection({ projects }) {
                   {imgSrc && (
                     <div onClick={() => href && window.open(href, '_blank')}
                       style={{ width: '100%', height: 190, overflow: 'hidden', borderRadius: 10, marginBottom: 16, cursor: href ? 'pointer' : 'default' }}>
-                      <img src={imgSrc} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={imgSrc} alt={p.title} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                   )}
                   <div className="cm-num" style={{ marginBottom: 8 }}>{String(i + 1).padStart(2, '0')}</div>
@@ -101,7 +101,7 @@ export default function ProjectsSection({ projects }) {
                 {imgSrc ? (
                   <div onClick={() => href && window.open(href, '_blank')}
                     style={{ order: isEven ? 2 : 1, position: 'relative', overflow: 'hidden', borderRadius: 8, height: 220, cursor: href ? 'pointer' : 'default' }}>
-                    <img src={imgSrc} alt={p.title} style={{
+                    <img src={imgSrc} alt={p.title} loading="lazy" decoding="async" style={{
                       width: '100%', height: '100%', objectFit: 'cover',
                       transition: 'transform 0.5s', transform: isHov ? 'scale(1.04)' : 'scale(1)',
                     }} />

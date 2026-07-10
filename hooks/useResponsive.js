@@ -10,9 +10,19 @@ export function useResponsive() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check(); // run on mount
-    window.addEventListener('resize', check);
+    // rAF-throttled: this hook is mounted by many components at once, so an
+    // unthrottled resize listener means every one of them recomputes on every tick.
+    let ticking = false;
+    const check = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        setIsMobile(window.innerWidth < 768);
+        ticking = false;
+      });
+    };
+    setIsMobile(window.innerWidth < 768); // run on mount, unthrottled
+    window.addEventListener('resize', check, { passive: true });
     return () => window.removeEventListener('resize', check);
   }, []);
 

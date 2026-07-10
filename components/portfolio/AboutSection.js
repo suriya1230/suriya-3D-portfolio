@@ -46,6 +46,7 @@ export default function AboutSection({ about }) {
                 filter: 'blur(28px)', zIndex: 0,
               }} />
               <img src={about?.photoUrl || '/images/profile.jpeg'} alt={about?.name || 'Suriya'}
+                loading="lazy" decoding="async"
                 style={{
                   position: 'relative', width: '100%', height: '100%',
                   borderRadius: '50%', objectFit: 'cover',

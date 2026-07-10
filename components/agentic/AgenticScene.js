@@ -42,7 +42,6 @@ import {
   Instance,
 } from '@react-three/drei';
 
-import { gsap } from 'gsap';
 import * as THREE from 'three';
 
 import { fetchRTDB } from '@/lib/rtdb';

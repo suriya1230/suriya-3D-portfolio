@@ -19,8 +19,18 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen]   = useState(false);
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 40);
-    window.addEventListener('scroll', fn);
+    // rAF-throttled + passive: keeps the scroll thread from blocking on this handler,
+    // and never runs it more than once per rendered frame during fast scroll gestures.
+    let ticking = false;
+    const fn = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 40);
+        ticking = false;
+      });
+    };
+    window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
   }, []);
 
@@ -49,6 +59,8 @@ export default function Navbar() {
         background: navBg, borderBottom: navBorder,
         backdropFilter: blur, WebkitBackdropFilter: blur,
         transition: 'background 0.4s, border-color 0.4s',
+        willChange: 'background-color, backdrop-filter',
+        transform: 'translateZ(0)',
       }}>
         {/* Logo */}
         <a href="#top" style={{
