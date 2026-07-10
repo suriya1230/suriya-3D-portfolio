@@ -15,14 +15,15 @@
 
 'use client';
 
-import { 
-  useRef, 
-  useState, 
-  useEffect, 
-  Suspense, 
-  useMemo, 
-  useCallback, 
-  forwardRef 
+import {
+  useRef,
+  useState,
+  useEffect,
+  Suspense,
+  useMemo,
+  useCallback,
+  forwardRef,
+  memo,
 } from 'react';
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
@@ -37,6 +38,8 @@ import {
   Sparkles,
   Environment,
   useGLTF,
+  Instances,
+  Instance,
 } from '@react-three/drei';
 
 import { gsap } from 'gsap';
@@ -219,7 +222,7 @@ function GeometryFerrari() {
 // ─────────────────────────────────────────────────────────
 // FERRARI ENTITY — moves along +Z axis
 // ─────────────────────────────────────────────────────────
-const Ferrari = forwardRef(({ targetZ }, forwardedRef) => {
+const Ferrari = memo(forwardRef(({ targetZ }, forwardedRef) => {
   const localRef = useRef();
   const initDone = useRef(false);
 
@@ -271,12 +274,12 @@ const Ferrari = forwardRef(({ targetZ }, forwardedRef) => {
       </Suspense>
     </group>
   );
-});
+}));
 // ─────────────────────────────────────────────────────────
 // CINEMATIC CAMERA — Low bumper-level chase cam
 // Car travels +Z. Camera behind car at low Y = sees rear of car.
 // ─────────────────────────────────────────────────────────
-function CinematicCamera({ targetZ, isTransitioning, carRef }) {
+const CinematicCamera = memo(function CinematicCamera({ targetZ, isTransitioning, carRef }) {
   const { camera } = useThree();
   const lookPt = useRef(new THREE.Vector3(0, 1, -10));
   const carZ   = useRef(-100);
@@ -316,15 +319,24 @@ function CinematicCamera({ targetZ, isTransitioning, carRef }) {
 });
 
   return null;
-}
+});
 
 // ─────────────────────────────────────────────────────────
 // ROAD — Along Z axis, centered on X=0
 // Buildings are to the RIGHT (+X = +18)
+// Static geometry takes no props, so it's memoized and the repeated dashes/lamps
+// are instanced — same visuals, far fewer draw calls than one mesh per dash/lamp.
 // ─────────────────────────────────────────────────────────
-function Road() {
+const Road = memo(function Road() {
   const roadLength = 700;   // from -100 to +180 = 280 units
   const roadCenterZ = 200;   // center of travel range
+  const dashCount = 140;
+  const lampCount = 24;
+
+  const lampPositions = useMemo(
+    () => Array.from({ length: lampCount }, (_, i) => [-7.5, -100 + i * 10]),
+    []
+  );
 
   return (
     <group>
@@ -334,12 +346,14 @@ function Road() {
         <meshStandardMaterial color="#06060f" roughness={0.93} metalness={0.15} />
       </mesh>
 
-      {/* Centre dashes — PURPLE, along Z */}
-      {Array.from({ length: 140 }).map((_, i) => (
-        <Box key={i} args={[0.12, 0.025, 4]} position={[0, 0.01, -100 + i * 5]}>
-          <meshStandardMaterial color={PURPLE} emissive={PURPLE} emissiveIntensity={2.0} />
-        </Box>
-      ))}
+      {/* Centre dashes — PURPLE, along Z — instanced: 140 dashes in a single draw call */}
+      <Instances limit={dashCount}>
+        <boxGeometry args={[0.12, 0.025, 4]} />
+        <meshStandardMaterial color={PURPLE} emissive={PURPLE} emissiveIntensity={2.0} />
+        {Array.from({ length: dashCount }).map((_, i) => (
+          <Instance key={i} position={[0, 0.01, -100 + i * 5]} />
+        ))}
+      </Instances>
 
       {/* LEFT edge — BLUE (far from buildings) */}
       <Box args={[0.08, 0.025, roadLength]} position={[-5.5, 0.01, roadCenterZ]}>
@@ -356,25 +370,40 @@ function Road() {
         <meshStandardMaterial color="#010108" roughness={1} />
       </mesh>
 
-      {/* Street lamps — LEFT side (camera side) */}
-      {Array.from({ length: 24 }).map((_, i) => (
-        <group key={`lamp${i}`} position={[-7.5, 0, -100 + i * 10]}>
-          <Cylinder args={[0.06, 0.09, 4.2, 5]} position={[0, 2.1, 0]}>
-            <meshStandardMaterial color="#090918" metalness={0.88} roughness={0.15} />
-          </Cylinder>
-          <Sphere args={[0.14, 7, 7]} position={[0, 4.5, 0]}>
-            <meshStandardMaterial color={i % 2 === 0 ? PURPLE : BLUE} emissive={i % 2 === 0 ? PURPLE : BLUE} emissiveIntensity={6} />
-          </Sphere>
-          <pointLight position={[0, 4.5, 0]} intensity={1.2} distance={16} color={i % 2 === 0 ? PURPLE : BLUE} />
-        </group>
+      {/* Street lamps — LEFT side (camera side) — posts + bulbs instanced, lights stay individual */}
+      <Instances limit={lampCount}>
+        <cylinderGeometry args={[0.06, 0.09, 4.2, 5]} />
+        <meshStandardMaterial color="#090918" metalness={0.88} roughness={0.15} />
+        {lampPositions.map(([x, z], i) => (
+          <Instance key={i} position={[x, 2.1, z]} />
+        ))}
+      </Instances>
+      <Instances limit={Math.ceil(lampCount / 2)}>
+        <sphereGeometry args={[0.14, 7, 7]} />
+        <meshStandardMaterial color={PURPLE} emissive={PURPLE} emissiveIntensity={6} />
+        {lampPositions.filter((_, i) => i % 2 === 0).map(([x, z], i) => (
+          <Instance key={i} position={[x, 4.5, z]} />
+        ))}
+      </Instances>
+      <Instances limit={Math.floor(lampCount / 2)}>
+        <sphereGeometry args={[0.14, 7, 7]} />
+        <meshStandardMaterial color={BLUE} emissive={BLUE} emissiveIntensity={6} />
+        {lampPositions.filter((_, i) => i % 2 === 1).map(([x, z], i) => (
+          <Instance key={i} position={[x, 4.5, z]} />
+        ))}
+      </Instances>
+      {lampPositions.map(([x, z], i) => (
+        <pointLight key={`lamplight${i}`} position={[x, 4.5, z]} intensity={1.2} distance={16} color={i % 2 === 0 ? PURPLE : BLUE} />
       ))}
     </group>
   );
-}
+});
 
 // 🔥 FIRE TEXT COMPONENT
-function FireText({ text }) {
+const FireText = memo(function FireText({ text }) {
   const ref = useRef();
+  const colorRef = useRef();
+  if (!colorRef.current) colorRef.current = new THREE.Color();
 
   useFrame(({ clock }) => {
     if (!ref.current) return;
@@ -385,11 +414,12 @@ function FireText({ text }) {
     ref.current.material.emissiveIntensity =
       2 + Math.sin(t * 4) * 1.5;
 
-    // 🔥 flowing color shift
+    // 🔥 flowing color shift — reuse one Color instance instead of allocating a
+    // new THREE.Color 60x/sec per banner (7 banners × 60fps = 420 allocs/sec saved)
     const hue = (t * 0.1) % 1;
-    const color = new THREE.Color().setHSL(hue, 1, 0.5);
-    ref.current.material.color = color;
-    ref.current.material.emissive = color;
+    colorRef.current.setHSL(hue, 1, 0.5);
+    ref.current.material.color.copy(colorRef.current);
+    ref.current.material.emissive.copy(colorRef.current);
 
     // 🔥 slight breathing scale
     const scale = 1 + Math.sin(t * 3) * 0.05;
@@ -417,11 +447,11 @@ function FireText({ text }) {
       />
     </Text>
   );
-}
+});
 
 
 // 🔥 ROAD BANNER (FINAL)
-function RoadBanner({ text, z, color }) {
+const RoadBanner = memo(function RoadBanner({ text, z, color }) {
   return (
     <group position={[0, 10, z]}>
       
@@ -474,14 +504,14 @@ function RoadBanner({ text, z, color }) {
 />
     </group>
   );
-}
+});
 
 
 // ─────────────────────────────────────────────────────────
 // SECTION BUILDING — placed on RIGHT side (X=+18 from road)
 // Faces LEFT toward road (toward camera when stopped)
 // ─────────────────────────────────────────────────────────
-function SectionBuilding({ room, isActive }) {
+const SectionBuilding = memo(function SectionBuilding({ room, isActive }) {
   const glowRef = useRef();
   const c = room.color;
   const H = 32;
@@ -564,12 +594,12 @@ function SectionBuilding({ room, isActive }) {
       )}
     </group>
   );
-}
+});
 
 // ─────────────────────────────────────────────────────────
 // CITY SKYLINE — far RIGHT (+X) of buildings
 // ─────────────────────────────────────────────────────────
-function CityBackground() {
+const CityBackground = memo(function CityBackground() {
   const bldgs = useMemo(() => {
     const cols = [PURPLE, BLUE, YELLOW];
     return Array.from({ length: 16 }).map((_, i) => ({
@@ -602,12 +632,12 @@ function CityBackground() {
       ))}
     </group>
   );
-}
+});
 
 // ─────────────────────────────────────────────────────────
 // NEON RAIN
 // ─────────────────────────────────────────────────────────
-function NeonRain({ targetZ }) {
+const NeonRain = memo(function NeonRain({ targetZ }) {
   const ref = useRef();
   const positions = useMemo(() => {
     const a = new Float32Array(180);
@@ -643,12 +673,12 @@ function NeonRain({ targetZ }) {
       <pointsMaterial color={BLUE} size={0.05} transparent opacity={0.36} sizeAttenuation />
     </points>
   );
-}
+});
 
 // ─────────────────────────────────────────────────────────
 // SCENE LIGHTING
 // ─────────────────────────────────────────────────────────
-function SceneLighting({ activeRoom }) {
+const SceneLighting = memo(function SceneLighting({ activeRoom }) {
   const room = ROOMS[activeRoom];
   const color = room?.color || YELLOW;
 
@@ -664,7 +694,7 @@ function SceneLighting({ activeRoom }) {
       <fog attach="fog" args={[DARK, 200, 800]} />
     </>
   );
-}
+});
 
 // ─────────────────────────────────────────────────────────
 // MAIN EXPORT
@@ -817,11 +847,6 @@ function buildSpeechFromData(roomId, data) {
 
   const rawData = data[ROOMS[currentRoom]?.id];
 
-// 🔥 DEBUG LOGS
-console.log("🔥 FULL DATA:", data);
-console.log("🔥 CURRENT SECTION:", ROOMS[currentRoom]?.id);
-console.log("🔥 RAW DATA:", rawData);
-
 const sectionData = useMemo(() => {
   if (!rawData) return [];
   return Array.isArray(rawData) ? rawData : [rawData];
@@ -836,6 +861,12 @@ const sectionData = useMemo(() => {
   }, [data.about]);
 
   const targetZ = ROOMS[currentRoom]?.carZ ?? 0;
+
+  // Stable handler identities so <AgentHUD> (memoized) can actually skip re-renders
+  // when unrelated state (e.g. canAutoMove) changes elsewhere in this component.
+  const handleNext = useCallback(() => goToRoom(currentRoom + 1), [goToRoom, currentRoom]);
+  const handlePrev = useCallback(() => goToRoom(currentRoom - 1), [goToRoom, currentRoom]);
+  const handleCloseBigCard = useCallback(() => setShowBigCard(false), []);
 
   return (
     <div style={{ width:'100%', height:'100vh', position:'relative', overflow:'hidden', background:DARK }}>
@@ -885,8 +916,8 @@ const sectionData = useMemo(() => {
       <AgentHUD
         rooms={ROOMS}
         currentRoom={currentRoom}
-        onNext={() => goToRoom(currentRoom + 1)}
-        onPrev={() => goToRoom(currentRoom - 1)}
+        onNext={handleNext}
+        onPrev={handlePrev}
         onGoTo={goToRoom}
         speaking={speaking}
         roomInfo={ROOMS[currentRoom]}
@@ -894,7 +925,7 @@ const sectionData = useMemo(() => {
         isTransitioning={isTransitioning}
         atmosphere={ROOMS[currentRoom]?.atmosphere}
         showBigCard={showBigCard}
-        onCloseBigCard={() => setShowBigCard(false)}
+        onCloseBigCard={handleCloseBigCard}
         resumeUrl={resumeUrl}
         persona={persona}
         switchPersona={switchPersona}

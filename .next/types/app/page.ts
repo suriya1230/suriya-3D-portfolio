@@ -1,4 +1,4 @@
-// File: C:\Users\Dell I5\Downloads\suriya-v8\suriya-portfolio\app\page.js
+// File: D:\Suriya\Task\suriya-3D-portfolio\app\page.js
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

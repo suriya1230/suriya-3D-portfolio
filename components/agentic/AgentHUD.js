@@ -1,7 +1,7 @@
 // components/agentic/AgentHUD.js — responsive with useResponsive hook
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { Mail, Phone, Globe } from 'lucide-react';
 import { FaGithub, FaLinkedin, FaInstagram } from 'react-icons/fa';
 import { useResponsive } from '@/hooks/useResponsive';
@@ -34,7 +34,7 @@ const glass = (bc, extra={}) => ({
   borderRadius: 11, position: 'relative', ...extra,
 });
 
-function Brackets({ color, size=12 }) {
+const Brackets = memo(function Brackets({ color, size=12 }) {
   const s = `${size}px`;
   const b = { position:'absolute', width:s, height:s, borderColor:color, borderStyle:'solid', opacity:0.78 };
   return (<>
@@ -43,9 +43,9 @@ function Brackets({ color, size=12 }) {
     <div style={{...b, bottom:0, left:0, borderWidth:'0 0 2px 2px'}} />
     <div style={{...b, bottom:0, right:0, borderWidth:'0 2px 2px 0'}} />
   </>);
-}
+});
 
-function Wave({ color }) {
+const Wave = memo(function Wave({ color }) {
   return (
     <div style={{ display:'flex', alignItems:'flex-end', gap:2.5, height:24 }}>
       {[3,6,9,12,15,12,9,14,11,8,6,10,7,4].map((h,i) => (
@@ -53,22 +53,34 @@ function Wave({ color }) {
       ))}
     </div>
   );
-}
+});
 
-function Ring({ color, size=40 }) {
+const Ring = memo(function Ring({ color, size=40 }) {
   return <div style={{ width:size, height:size, borderRadius:'50%', border:`2.5px solid ${color}`, boxShadow:`0 0 14px ${color}55, inset 0 0 10px ${color}20`, animation:'float 3s ease-in-out infinite', flexShrink:0 }} />;
-}
+});
 
-function StatRow({ label, value, color }) {
+const StatRow = memo(function StatRow({ label, value, color }) {
   return (
     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:`1px solid ${color}18` }}>
       <span style={{...M, fontSize:'0.8rem', opacity:0.35, letterSpacing:'0.07em'}}>{label}</span>
       <span style={{...M, fontSize:'0.82rem', color, fontWeight:600}}>{value}</span>
     </div>
   );
-}
+});
 
-function SmallCard({ item, color, index }) {
+// Isolated clock — the only piece of the HUD that needs to re-render every second.
+const Clock = memo(function Clock({ style }) {
+  const [time, setTime] = useState('');
+  useEffect(() => {
+    const tick = () => setTime(new Date().toLocaleTimeString('en-US', { hour12: false }));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return <span style={style}>{time}</span>;
+});
+
+const SmallCard = memo(function SmallCard({ item, color, index }) {
   const title = item.title||item.name||item.degree||`Entry ${index+1}`;
   const sub   = item.subtitle||item.issuer||item.institution||item.category||'';
   return (
@@ -86,9 +98,9 @@ function SmallCard({ item, color, index }) {
       )}
     </motion.div>
   );
-}
+});
 
-function CardBody({ sectionId, allData, color, roomInfo, isMobile }) {
+const CardBody = memo(function CardBody({ sectionId, allData, color, roomInfo, isMobile }) {
   const wrapStyle = {
     flex:1, overflowY:'auto', padding: isMobile ? '12px 14px' : '16px 20px',
     background:'rgba(2,1,20,0.92)', border:`1px solid ${color}30`,
@@ -183,9 +195,9 @@ function CardBody({ sectionId, allData, color, roomInfo, isMobile }) {
       </div>
     </div>
   );
-}
+});
 
-function BigSectionCard({ roomInfo, allData, color, onClose, resumeUrl, isMobile }) {
+const BigSectionCard = memo(function BigSectionCard({ roomInfo, allData, color, onClose, resumeUrl, isMobile }) {
   const sectionId = roomInfo?.id || 'about';
   return (
     <motion.div initial={{opacity:0,y:60,scale:0.94}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:40,scale:0.96}}
@@ -219,17 +231,11 @@ function BigSectionCard({ roomInfo, allData, color, onClose, resumeUrl, isMobile
       </div>
     </motion.div>
   );
-}
+});
 
-export default function AgentHUD({ rooms, currentRoom, onNext, onPrev, onGoTo, speaking, roomInfo, sectionData, isTransitioning, showBigCard, onCloseBigCard, resumeUrl, persona, switchPersona, stopVoice }) {
+function AgentHUD({ rooms, currentRoom, onNext, onPrev, onGoTo, speaking, roomInfo, sectionData, isTransitioning, showBigCard, onCloseBigCard, resumeUrl, persona, switchPersona, stopVoice }) {
   const { isMobile } = useResponsive();
-  const [time, setTime] = useState('');
   const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    const tick = () => setTime(new Date().toLocaleTimeString('en-US',{hour12:false}));
-    tick(); const id = setInterval(tick,1000); return ()=>clearInterval(id);
-  }, []);
 
   useEffect(() => {
     setShow(false);
@@ -365,7 +371,7 @@ export default function AgentHUD({ rooms, currentRoom, onNext, onPrev, onGoTo, s
               </div>
               <div style={{ padding:'7px 16px', background:'rgba(2,1,20,0.82)', border:`1px solid ${color}22`, borderTop:'none', borderRadius:'0 0 11px 11px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <span style={{...M,fontSize:'0.62rem',color:'rgba(255,255,255,0.2)'}}>LIVE DATA</span>
-                <span style={{...M,fontSize:'0.62rem',color:'rgba(255,255,255,0.2)'}}>{time}</span>
+                <Clock style={{...M,fontSize:'0.62rem',color:'rgba(255,255,255,0.2)'}} />
               </div>
             </motion.div>
           )}
@@ -413,9 +419,11 @@ export default function AgentHUD({ rooms, currentRoom, onNext, onPrev, onGoTo, s
           <span style={{...M, fontSize:'0.62rem', color:'rgba(255,255,255,0.12)', letterSpacing:'0.12em'}}>Ferrari SF90 XX Stradale</span>
         </div>
         <div style={{ position:'fixed', bottom:'calc(5vh + 8px)', right:18, zIndex:38, pointerEvents:'none', textAlign:'right' }}>
-          <span style={{...M, fontSize:'0.62rem', color:'rgba(255,255,255,0.12)', letterSpacing:'0.12em'}}>NEON ODYSSEY · {time}</span>
+          <span style={{...M, fontSize:'0.62rem', color:'rgba(255,255,255,0.12)', letterSpacing:'0.12em'}}>NEON ODYSSEY · <Clock style={{ display: 'inline' }} /></span>
         </div>
       </>)}
     </>
   );
 }
+
+export default memo(AgentHUD);

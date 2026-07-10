@@ -1,4 +1,7 @@
 {
-  "/page": "app/page.js",
-  "/agentic/page": "app/agentic/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/admin-dashboard/page": "app/admin-dashboard/page.js",
+  "/admin-login/page": "app/admin-login/page.js",
+  "/agentic/page": "app/agentic/page.js",
+  "/page": "app/page.js"
 }
