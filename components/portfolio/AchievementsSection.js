@@ -28,6 +28,7 @@ export default function AchievementsSection({ achievements }) {
                 gap: isMobile ? 14 : 28, alignItems: 'start',
                 padding: isMobile ? '20px 0' : '28px 0',
                 borderBottom: '1px solid hsl(0 0% 15%)',
+                contain: 'content',
               }}>
               <div className="cm-num">{String(i + 1).padStart(2, '0')}</div>
               <div>

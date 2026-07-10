@@ -90,6 +90,7 @@ export default function SkillsSection({ skills }) {
                       padding: isMobile ? '10px 12px' : '14px 16px',
                       background: 'hsl(0 0% 11%)', border: '1px solid hsl(0 0% 18%)',
                       borderRadius: 10, cursor: 'default', transition: 'all 0.25s',
+                      contain: 'content',
                     }}
                     whileHover={{ borderColor: meta.color + '55', backgroundColor: meta.bg }}>
                     {/* Icon */}

@@ -30,6 +30,7 @@ export default function CertificatesSection({ certificates }) {
                 padding: isMobile ? '16px 14px' : '28px 24px',
                 border: '1px solid hsl(0 0% 15%)', background: 'hsl(0 0% 9%)',
                 transition: 'background 0.3s, border-color 0.3s',
+                contain: 'content',
               }}
               onMouseEnter={e => { e.currentTarget.style.background = 'hsl(0 0% 12%)'; e.currentTarget.style.borderColor = 'hsl(119 99% 46% / 0.2)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'hsl(0 0% 9%)'; e.currentTarget.style.borderColor = 'hsl(0 0% 15%)'; }}>

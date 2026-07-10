@@ -55,7 +55,7 @@ export default function ProjectsSection({ projects }) {
                 <motion.div key={p.id || i}
                   initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }} transition={{ duration: 0.6, delay: i * 0.07 }}
-                  style={{ padding: '24px 0', borderBottom: '1px solid hsl(0 0% 14%)' }}>
+                  style={{ padding: '24px 0', borderBottom: '1px solid hsl(0 0% 14%)', contain: 'content' }}>
                   {imgSrc && (
                     <div onClick={() => href && window.open(href, '_blank')}
                       style={{ width: '100%', height: 190, overflow: 'hidden', borderRadius: 10, marginBottom: 16, cursor: href ? 'pointer' : 'default' }}>
@@ -96,6 +96,7 @@ export default function ProjectsSection({ projects }) {
                   borderBottom: '1px solid',
                   borderColor: isHov ? 'hsl(119 99% 46% / 0.2)' : 'hsl(0 0% 14%)',
                   transition: 'border-color 0.3s',
+                  contain: 'content',
                 }}>
                 {/* Image */}
                 {imgSrc ? (

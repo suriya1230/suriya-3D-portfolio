@@ -28,6 +28,7 @@ export default function EducationSection({ education }) {
                 justifyContent: 'space-between', alignItems: 'flex-start',
                 padding: isMobile ? '20px 0' : '28px 0',
                 borderBottom: '1px solid hsl(0 0% 15%)', gap: isMobile ? 8 : 40,
+                contain: 'content',
               }}>
               <div style={{ flex: 1 }}>
                 <div className="cm-num" style={{ marginBottom: 8 }}>{String(i + 1).padStart(2, '0')}</div>

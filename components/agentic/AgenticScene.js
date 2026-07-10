@@ -280,8 +280,10 @@ const Ferrari = memo(forwardRef(({ targetZ }, forwardedRef) => {
 // ─────────────────────────────────────────────────────────
 const CinematicCamera = memo(function CinematicCamera({ targetZ, isTransitioning, carRef }) {
   const { camera } = useThree();
-  const lookPt = useRef(new THREE.Vector3(0, 1, -10));
-  const carZ   = useRef(-100);
+  // Reused every frame instead of allocating a new Vector3 60x/sec — the camera
+  // moves almost constantly, so this was the single largest GC-pressure source
+  // in the scene and the likely cause of the periodic micro-stutter during pans.
+  const camTarget = useRef(new THREE.Vector3());
 
   useFrame(() => {
   if (!carRef?.current) return;
@@ -313,7 +315,8 @@ const CinematicCamera = memo(function CinematicCamera({ targetZ, isTransitioning
     lz = car.z;
   }
 
-  camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.08);
+  camTarget.current.set(camX, camY, camZ);
+  camera.position.lerp(camTarget.current, 0.08);
   camera.lookAt(lx, ly, lz);
 });
 
