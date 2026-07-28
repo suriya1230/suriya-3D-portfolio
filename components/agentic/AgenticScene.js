@@ -315,7 +315,10 @@ const CinematicCamera = memo(function CinematicCamera({ targetZ, isTransitioning
 
   const camX = car.x - ORBIT_RADIUS * Math.sin(angle.current);
   const camY = car.y + THREE.MathUtils.lerp(3, 1.6, p);
-  const camZ = car.z - ORBIT_RADIUS * Math.cos(angle.current);
+  // + here, not - : the car's front faces the opposite Z side from what this
+  // was originally set to, confirmed from a live screenshot showing the stop
+  // pose (angle=0) landing on the back of the car instead of the front.
+  const camZ = car.z + ORBIT_RADIUS * Math.cos(angle.current);
 
   camTarget.current.set(camX, camY, camZ);
   camera.position.lerp(camTarget.current, 0.08);
