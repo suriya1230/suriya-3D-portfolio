@@ -286,54 +286,40 @@ const CinematicCamera = memo(function CinematicCamera({ targetZ, isTransitioning
   // moves almost constantly, so this was the single largest GC-pressure source
   // in the scene and the likely cause of the periodic micro-stutter during pans.
   const camTarget = useRef(new THREE.Vector3());
-  // goToRoom() keeps isTransitioning true for exactly 2.6s (see the setTimeout
-  // there) — that's the window this progress ramp is timed against.
-  const TRANSITION_SECONDS = 2.6;
-  const transitionStart = useRef(null);
+  // Single continuous orbit around the car instead of two disconnected formulas
+  // (a "back view" drive-start pose and a "front view" stop pose on opposite
+  // sides of the car). That old version required the camera to swing all the
+  // way around the car between every stop and every new drive, and it never
+  // reliably completed that swing after the first section — hence the
+  // back -> side -> back instead of back -> side -> front. Now angle=PI is
+  // back, PI/2 is side, 0 is front, and it only ever moves one direction
+  // (PI -> 0), resetting to PI at the start of each new drive, so every
+  // section goes through the same sequence.
+  const ORBIT_SWEEP_SECONDS = 4.5;
+  const ORBIT_RADIUS = 11;
+  const angle = useRef(Math.PI);
   const wasTransitioning = useRef(false);
 
-  useFrame(({ clock }) => {
+  useFrame((_, delta) => {
   if (!carRef?.current) return;
 
   const car = carRef.current.position;
 
   if (isTransitioning && !wasTransitioning.current) {
-    transitionStart.current = clock.elapsedTime;
+    angle.current = Math.PI; // fresh drive: start from back view again
   }
   wasTransitioning.current = isTransitioning;
 
-  let camX, camY, camZ;
-  let lx, ly, lz;
+  angle.current = Math.max(0, angle.current - (Math.PI / ORBIT_SWEEP_SECONDS) * delta);
+  const p = 1 - angle.current / Math.PI; // 0 at back view, 1 at front view
 
-  if (isTransitioning) {
-  // 🚗 ROLLING CAMERA — starts as a straight back view and swings out to a
-  // side view over the course of the drive, every section, not just the
-  // first (previously this was a static back-only shot).
-  const elapsed = transitionStart.current != null ? clock.elapsedTime - transitionStart.current : 0;
-  const t = THREE.MathUtils.clamp(elapsed / TRANSITION_SECONDS, 0, 1);
-
-  camX = car.x + THREE.MathUtils.lerp(0, -14, t);
-  camY = car.y + THREE.MathUtils.lerp(3, 2.2, t);
-  camZ = car.z + THREE.MathUtils.lerp(9, 1, t);
-
-  lx = car.x;
-  ly = car.y + 1.6;
-  lz = car.z;
-  } else {
-    // 🏁 STOP VIEW — front view of the car once parked (camera sits on the
-    // opposite side of the car from the driving-shot's back view).
-    camX = car.x + 2;
-    camY = car.y + 1.6;
-    camZ = car.z - 8;
-
-    lx = car.x;
-    ly = car.y + 1;
-    lz = car.z;
-  }
+  const camX = car.x - ORBIT_RADIUS * Math.sin(angle.current);
+  const camY = car.y + THREE.MathUtils.lerp(3, 1.6, p);
+  const camZ = car.z - ORBIT_RADIUS * Math.cos(angle.current);
 
   camTarget.current.set(camX, camY, camZ);
   camera.position.lerp(camTarget.current, 0.08);
-  camera.lookAt(lx, ly, lz);
+  camera.lookAt(car.x, car.y + THREE.MathUtils.lerp(1.8, 1, p), car.z);
 });
 
   return null;
