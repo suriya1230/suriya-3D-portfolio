@@ -243,7 +243,7 @@ const Ferrari = memo(forwardRef(({ targetZ }, forwardedRef) => {
     localRef.current.position.z = THREE.MathUtils.lerp(
       localRef.current.position.z,
       targetZ,
-      0.04
+      0.026
     );
 
     localRef.current.position.x = 0;
@@ -286,31 +286,45 @@ const CinematicCamera = memo(function CinematicCamera({ targetZ, isTransitioning
   // moves almost constantly, so this was the single largest GC-pressure source
   // in the scene and the likely cause of the periodic micro-stutter during pans.
   const camTarget = useRef(new THREE.Vector3());
+  // goToRoom() keeps isTransitioning true for exactly 2.6s (see the setTimeout
+  // there) — that's the window this progress ramp is timed against.
+  const TRANSITION_SECONDS = 2.6;
+  const transitionStart = useRef(null);
+  const wasTransitioning = useRef(false);
 
-  useFrame(() => {
+  useFrame(({ clock }) => {
   if (!carRef?.current) return;
 
   const car = carRef.current.position;
+
+  if (isTransitioning && !wasTransitioning.current) {
+    transitionStart.current = clock.elapsedTime;
+  }
+  wasTransitioning.current = isTransitioning;
 
   let camX, camY, camZ;
   let lx, ly, lz;
 
   if (isTransitioning) {
-  // 🚗 BACK CAMERA (SAFE + STABLE)
+  // 🚗 ROLLING CAMERA — starts as a straight back view and swings out to a
+  // side view over the course of the drive, every section, not just the
+  // first (previously this was a static back-only shot).
+  const elapsed = transitionStart.current != null ? clock.elapsedTime - transitionStart.current : 0;
+  const t = THREE.MathUtils.clamp(elapsed / TRANSITION_SECONDS, 0, 1);
 
-  camX = car.x;
-  camY = car.y + 3;        // medium height
-  camZ = car.z + 9;        // not too far
+  camX = car.x + THREE.MathUtils.lerp(0, -14, t);
+  camY = car.y + THREE.MathUtils.lerp(3, 2.2, t);
+  camZ = car.z + THREE.MathUtils.lerp(9, 1, t);
 
-  // 🎯 LOOK SLIGHTLY AHEAD (NOT TOO FAR)
   lx = car.x;
-  ly = car.y + 1.8;
-  lz = car.z - 6;          // 🔥 PERFECT BALANCE
+  ly = car.y + 1.6;
+  lz = car.z;
   } else {
-    // 🏁 STOP VIEW (your style)
-    camX = car.x + 3;
-    camY = car.y + 2;
-    camZ = car.z + 10;
+    // 🏁 STOP VIEW — front view of the car once parked (camera sits on the
+    // opposite side of the car from the driving-shot's back view).
+    camX = car.x + 2;
+    camY = car.y + 1.6;
+    camZ = car.z - 8;
 
     lx = car.x;
     ly = car.y + 1;
