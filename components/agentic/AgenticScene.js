@@ -24,6 +24,7 @@ import {
   useCallback,
   forwardRef,
   memo,
+  Component,
 } from 'react';
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
@@ -49,6 +50,41 @@ import * as THREE from 'three';
 import { fetchRTDB } from '@/lib/rtdb';
 import AgentHUD from './AgentHUD';
 import { useVoice } from '@/hooks/useVoice';
+import { useResponsive } from '@/hooks/useResponsive';
+
+// Weaker/older mobile GPUs can fail to initialize WebGL2 features this scene
+// uses (postprocessing, instancing) - without this, that failure was an
+// uncaught error that blanked the entire page instead of just the 3D canvas.
+class SceneErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error) {
+    console.error('[AgenticScene] render error:', error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          width: '100%', height: '100vh', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', background: '#02010a', color: 'rgba(255,255,255,0.6)',
+          textAlign: 'center', padding: 24, fontFamily: 'var(--font-mono)',
+        }}>
+          <div>
+            <div style={{ marginBottom: 12 }}>This device couldn't render the 3D experience.</div>
+            <a href="/" style={{ color: '#00D4FF' }}>Go back and try Manual mode →</a>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const PURPLE = '#7B2FFF';
 const BLUE   = '#00D4FF';
 const YELLOW = '#E8FF00';
@@ -727,7 +763,7 @@ const SceneLighting = memo(function SceneLighting({ activeRoom }) {
 // ─────────────────────────────────────────────────────────
 // MAIN EXPORT
 // ─────────────────────────────────────────────────────────
-export default function AgenticScene() {
+function AgenticScene() {
   const [currentRoom, setCurrentRoom]     = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showBigCard, setShowBigCard]     = useState(false);
@@ -735,6 +771,7 @@ export default function AgenticScene() {
   const { speak, stop, speaking, persona, switchPersona } = useVoice();
   const carRef = useRef();
   const [canAutoMove, setCanAutoMove] = useState(false);
+  const { isMobile } = useResponsive();
 
   useEffect(() => {
   const load = async () => {
@@ -900,15 +937,15 @@ const sectionData = useMemo(() => {
     <div style={{ width:'100%', height:'100vh', position:'relative', overflow:'hidden', background:DARK }}>
       <Canvas
         shadows={false}
-        dpr={[1, 1.2]}
+        dpr={isMobile ? [1, 1] : [1, 1.2]}
         // Initial camera: LEFT side of road, will GSAP to correct position
         camera={{ position: [0, 1.8, -86], fov: 72, near: 0.1, far: 700 }}
         gl={{
-          antialias: true,
+          antialias: !isMobile,
           toneMapping: THREE.ACESFilmicToneMapping,
           toneMappingExposure: 0.9,
           outputColorSpace: THREE.SRGBColorSpace,
-          powerPreference: 'high-performance',
+          powerPreference: isMobile ? 'default' : 'high-performance',
         }}
       >
         <Suspense fallback={null}>
@@ -940,15 +977,20 @@ const sectionData = useMemo(() => {
 />
           {/* Bloom replaces the ~54 always-on decorative point lights removed above —
               same neon glow on every emissive surface, as one full-screen pass instead
-              of dozens of per-fragment light calculations. */}
-          <EffectComposer multisampling={0}>
-            <Bloom
-              luminanceThreshold={0.85}
-              luminanceSmoothing={0.3}
-              intensity={0.18}
-              mipmapBlur
-            />
-          </EffectComposer>
+              of dozens of per-fragment light calculations. Skipped on mobile: the
+              postprocessing pass (plus mipmapBlur) is the heaviest single thing in
+              this scene, and weaker/older mobile GPUs are the most likely to fail
+              on it entirely rather than just run it slowly. */}
+          {!isMobile && (
+            <EffectComposer multisampling={0}>
+              <Bloom
+                luminanceThreshold={0.85}
+                luminanceSmoothing={0.3}
+                intensity={0.18}
+                mipmapBlur
+              />
+            </EffectComposer>
+          )}
         </Suspense>
       </Canvas>
 
@@ -985,6 +1027,14 @@ const sectionData = useMemo(() => {
       <div style={{ position:'fixed', bottom:'5vh', left:0, right:0, height:'2px', zIndex:45, pointerEvents:'none',
         background:`linear-gradient(to right, ${YELLOW}, ${BLUE}, ${PURPLE}, ${BLUE}, ${YELLOW})`, opacity:0.85 }} />
     </div>
+  );
+}
+
+export default function AgenticSceneWithBoundary() {
+  return (
+    <SceneErrorBoundary>
+      <AgenticScene />
+    </SceneErrorBoundary>
   );
 }
 

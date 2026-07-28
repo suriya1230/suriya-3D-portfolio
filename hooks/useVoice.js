@@ -7,11 +7,11 @@ import { useState, useCallback, useRef } from 'react';
 const VOICE_PROFILES = {
   jarvis: {
     names: ['Daniel', 'Google UK English Male', 'Alex', 'Arthur', 'Google US English', 'Microsoft David'],
-    rate: 0.88, pitch: 0.88, gender: 'male',
+    rate: 1, pitch: 0.88, gender: 'male',
   },
   friday: {
     names: ['Samantha', 'Google UK English Female', 'Karen', 'Moira', 'Veena', 'Microsoft Zira', 'Google US English Female', 'Victoria'],
-    rate: 0.92, pitch: 1.08, gender: 'female',
+    rate: 1, pitch: 1.08, gender: 'female',
   },
 };
 
@@ -42,50 +42,71 @@ export function useVoice() {
 
     const profile = VOICE_PROFILES[personaRef.current] || VOICE_PROFILES.jarvis;
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate   = options.rate   || profile.rate;
-    utterance.pitch  = options.pitch  || profile.pitch;
-    utterance.volume = options.volume || 1;
-    utterance.lang   = 'en-US';
-
-    const loadVoice = () => {
-      const voices = window.speechSynthesis.getVoices();
-      // Try each preferred name in order
-      let chosen = null;
+    const pickVoice = (voices) => {
       for (const name of profile.names) {
-        chosen = voices.find(v => v.name.includes(name));
-        if (chosen) break;
+        const match = voices.find(v => v.name.includes(name));
+        if (match) return match;
       }
-      // Fallback: pick any voice matching the gender heuristic
-      if (!chosen) {
-        chosen = voices.find(v =>
-          profile.gender === 'female'
-            ? v.name.toLowerCase().includes('female') || v.name.includes('Samantha') || v.name.includes('Karen')
-            : v.name.toLowerCase().includes('male') || v.name.includes('David') || v.name.includes('Daniel')
-        );
-      }
+      return voices.find(v =>
+        profile.gender === 'female'
+          ? v.name.toLowerCase().includes('female') || v.name.includes('Samantha') || v.name.includes('Karen')
+          : v.name.toLowerCase().includes('male') || v.name.includes('David') || v.name.includes('Daniel')
+      ) || null;
+    };
+
+    // On a fresh page load the voice list can still be empty here (Chrome loads
+    // it asynchronously) - speaking immediately in that case means the
+    // utterance goes out with no voice set and the browser falls back to
+    // whatever its own default is, which on some platforms/production
+    // environments is a much slower-sounding voice than the one picked once
+    // voices did load. Wait for the real list first instead of racing it.
+    const runSpeak = (voices) => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate   = options.rate   || profile.rate;
+      utterance.pitch  = options.pitch  || profile.pitch;
+      utterance.volume = options.volume || 1;
+      utterance.lang   = 'en-US';
+
+      const chosen = pickVoice(voices);
       if (chosen) utterance.voice = chosen;
+
+      utterance.onstart = () => setSpeaking(true);
+      utterance.onend = () => {
+        setSpeaking(false);
+        if (onEndRef.current) { onEndRef.current(); onEndRef.current = null; }
+      };
+      utterance.onerror = (e) => {
+        setSpeaking(false);
+        console.warn('[useVoice] Error:', e.error);
+        if (onEndRef.current) { onEndRef.current(); onEndRef.current = null; }
+      };
+
+      utteranceRef.current = utterance;
+      window.speechSynthesis.speak(utterance);
     };
 
-    if (window.speechSynthesis.getVoices().length > 0) {
-      loadVoice();
+    const existing = window.speechSynthesis.getVoices();
+    if (existing.length > 0) {
+      runSpeak(existing);
     } else {
-      window.speechSynthesis.addEventListener('voiceschanged', loadVoice, { once: true });
+      let started = false;
+      const onVoicesChanged = () => {
+        window.speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
+        if (started) return;
+        started = true;
+        runSpeak(window.speechSynthesis.getVoices());
+      };
+      window.speechSynthesis.addEventListener('voiceschanged', onVoicesChanged);
+      // Some browsers never fire voiceschanged (or already missed it) - fall
+      // back to speaking with whatever's available after a short wait so
+      // narration never just silently never starts.
+      setTimeout(() => {
+        window.speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
+        if (started) return;
+        started = true;
+        runSpeak(window.speechSynthesis.getVoices());
+      }, 400);
     }
-
-    utterance.onstart = () => setSpeaking(true);
-    utterance.onend = () => {
-      setSpeaking(false);
-      if (onEndRef.current) { onEndRef.current(); onEndRef.current = null; }
-    };
-    utterance.onerror = (e) => {
-      setSpeaking(false);
-      console.warn('[useVoice] Error:', e.error);
-      if (onEndRef.current) { onEndRef.current(); onEndRef.current = null; }
-    };
-
-    utteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
   }, []);
 
   const stop = useCallback(() => {
