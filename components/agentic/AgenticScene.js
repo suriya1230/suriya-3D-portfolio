@@ -539,22 +539,22 @@ const SectionBuilding = memo(function SectionBuilding({ room, isActive, isNear }
           color={c}
           transparent opacity={isActive ? 0.25 : 0.06}
           metalness={0.9} roughness={0}
-          emissive={c} emissiveIntensity={isActive ? 0.3 : 0.04}
+          emissive={c} emissiveIntensity={isActive ? 0.16 : 0.04}
         />
       </Box>
 
       {/* Frame edges */}
       <Box args={[12.6, 0.22, 10.6]} position={[0, H+0.11, 0]}>
-        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={isActive ? 4 : 0.4} />
+        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={isActive ? 2.2 : 0.4} />
       </Box>
       <Box args={[12.6, 0.22, 10.6]} position={[0, 0.11, 0]}>
-        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={isActive ? 4 : 0.4} />
+        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={isActive ? 2.2 : 0.4} />
       </Box>
       <Box args={[0.22, H, 10.6]} position={[-6.4, H/2, 0]}>
-        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={isActive ? 4 : 0.4} />
+        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={isActive ? 2.2 : 0.4} />
       </Box>
       <Box args={[0.22, H, 10.6]} position={[6.4, H/2, 0]}>
-        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={isActive ? 4 : 0.4} />
+        <meshStandardMaterial color={c} emissive={c} emissiveIntensity={isActive ? 2.2 : 0.4} />
       </Box>
 
       {/* Section label — on left face, visible from road */}
@@ -716,9 +716,9 @@ const SceneLighting = memo(function SceneLighting({ activeRoom }) {
       <ambientLight intensity={0.1} color="#07051c" />
       <directionalLight position={[20, 50, 30]} intensity={0.3} color="#b0b8ff" />
       {/* Key light from building side — shines LEFT toward road */}
-      <pointLight position={[BUILDING_X + 8, 28, room?.carZ || 0]} intensity={16} color={color} distance={200} />
+      <pointLight position={[BUILDING_X + 8, 28, room?.carZ || 0]} intensity={9} color={color} distance={200} />
       {/* Road under-glow */}
-      <pointLight position={[0, -1, 40]} intensity={3.5} color={PURPLE} distance={300} />
+      <pointLight position={[0, -1, 40]} intensity={2} color={PURPLE} distance={300} />
       <fog attach="fog" args={[DARK, 200, 800]} />
     </>
   );
@@ -906,7 +906,7 @@ const sectionData = useMemo(() => {
         gl={{
           antialias: true,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.2,
+          toneMappingExposure: 0.9,
           outputColorSpace: THREE.SRGBColorSpace,
           powerPreference: 'high-performance',
         }}
@@ -943,9 +943,9 @@ const sectionData = useMemo(() => {
               of dozens of per-fragment light calculations. */}
           <EffectComposer multisampling={0}>
             <Bloom
-              luminanceThreshold={0.75}
-              luminanceSmoothing={0.25}
-              intensity={0.35}
+              luminanceThreshold={0.85}
+              luminanceSmoothing={0.3}
+              intensity={0.18}
               mipmapBlur
             />
           </EffectComposer>
