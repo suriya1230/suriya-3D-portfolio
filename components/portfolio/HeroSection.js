@@ -1,12 +1,40 @@
 // components/portfolio/HeroSection.js
 'use client';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { useResponsive } from '@/hooks/useResponsive';
 
 const Spline = lazy(() => import('@splinetool/react-spline'));
 
 export default function HeroSection({ about }) {
   const { isMobile } = useResponsive();
+  const splineAppRef = useRef(null);
+  // Mount the Spline scene one idle tick after first paint instead of immediately —
+  // text/layout paints instantly, the heavy WebGL scene loads a beat later.
+  const [mountSpline, setMountSpline] = useState(false);
+
+  useEffect(() => {
+    if (isMobile) return;
+    const idle = window.requestIdleCallback
+      ? window.requestIdleCallback(() => setMountSpline(true), { timeout: 1500 })
+      : setTimeout(() => setMountSpline(true), 200);
+    return () => {
+      if (window.cancelIdleCallback) window.cancelIdleCallback(idle);
+      else clearTimeout(idle);
+    };
+  }, [isMobile]);
+
+  // Pause the Spline runtime while the tab is hidden so it isn't rendering in the
+  // background, and resume when the visitor comes back.
+  useEffect(() => {
+    const onVisibility = () => {
+      const app = splineAppRef.current;
+      if (!app) return;
+      if (document.hidden) app.stop();
+      else app.play();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
   const name = about?.name    || 'Suriya';
   const role = about?.tagline || 'AI Engineer & Researcher';
   const bio  = about?.bio     || 'Building intelligent systems that learn, adapt, and solve real-world problems using advanced AI technologies.';
@@ -22,12 +50,13 @@ export default function HeroSection({ about }) {
       background: 'hsl(0 0% 8%)',
       overflow: 'hidden',
     }}>
-      {/* 3D Background — desktop only */}
-      {!isMobile && (
+      {/* 3D Background — desktop only, mounted a beat after first paint */}
+      {!isMobile && mountSpline && (
         <div style={{ position: 'absolute', inset: 0 }}>
           <Suspense fallback={<div style={{ position: 'absolute', inset: 0, background: 'hsl(0 0% 8%)' }} />}>
             <Spline scene="https://prod.spline.design/Slk6b8kz3LRlKiyk/scene.splinecode"
-              style={{ width: '100%', height: '100%' }} />
+              style={{ width: '100%', height: '100%' }}
+              onLoad={(app) => { splineAppRef.current = app; if (document.hidden) app.stop(); }} />
           </Suspense>
         </div>
       )}

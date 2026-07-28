@@ -42,6 +42,8 @@ import {
   Instance,
 } from '@react-three/drei';
 
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
+
 import * as THREE from 'three';
 
 import { fetchRTDB } from '@/lib/rtdb';
@@ -394,9 +396,10 @@ const Road = memo(function Road() {
           <Instance key={i} position={[x, 4.5, z]} />
         ))}
       </Instances>
-      {lampPositions.map(([x, z], i) => (
-        <pointLight key={`lamplight${i}`} position={[x, 4.5, z]} intensity={1.2} distance={16} color={i % 2 === 0 ? PURPLE : BLUE} />
-      ))}
+      {/* Lamp bulbs no longer cast real dynamic lights — 24 always-on point lights
+          were the single biggest lighting cost in this scene. Their emissive
+          material is already bright enough that <Bloom/> reproduces the same
+          glow purely as a post-process, at a fraction of the GPU cost. */}
     </group>
   );
 });
@@ -406,9 +409,14 @@ const FireText = memo(function FireText({ text }) {
   const ref = useRef();
   const colorRef = useRef();
   if (!colorRef.current) colorRef.current = new THREE.Color();
+  const frameCount = useRef(0);
 
   useFrame(({ clock }) => {
     if (!ref.current) return;
+    // 7 banners each recomputing HSL + touching material every frame adds up;
+    // the hue cycle is slow enough that every 3rd frame (~20fps) looks identical.
+    frameCount.current++;
+    if (frameCount.current % 3 !== 0) return;
 
     const t = clock.elapsedTime;
 
@@ -481,6 +489,9 @@ const RoadBanner = memo(function RoadBanner({ text, z, color }) {
 
       {/* 🔥 FIRE TEXT */}
       <FireText text={text} />
+      {/* Glow plane is emissive-lit by <Bloom/> now — the two pointLights that used
+          to sit here (×7 banners = 14 always-on lights) are gone; same glow, no
+          per-fragment lighting cost. */}
       <mesh position={[0, 1, -0.3]}>
   <planeGeometry args={[8, 3]} />
   <meshBasicMaterial
@@ -489,21 +500,6 @@ const RoadBanner = memo(function RoadBanner({ text, z, color }) {
     opacity={0.25}
   />
 </mesh>
-
-<pointLight
-  position={[0, 2, 0]}
-  intensity={10}
-  distance={40}
-  color="#ff5500"
-/>
-
-      {/* 🔥 GLOW LIGHT */}
-      <pointLight
-  position={[0, 3, 0]}
-  intensity={8}
-  distance={30}
-  color="#ff3300"
-/>
     </group>
   );
 });
@@ -513,7 +509,7 @@ const RoadBanner = memo(function RoadBanner({ text, z, color }) {
 // SECTION BUILDING — placed on RIGHT side (X=+18 from road)
 // Faces LEFT toward road (toward camera when stopped)
 // ─────────────────────────────────────────────────────────
-const SectionBuilding = memo(function SectionBuilding({ room, isActive }) {
+const SectionBuilding = memo(function SectionBuilding({ room, isActive, isNear }) {
   const glowRef = useRef();
   const c = room.color;
   const H = 32;
@@ -581,8 +577,11 @@ const SectionBuilding = memo(function SectionBuilding({ room, isActive }) {
         {room.cityZone}
       </Text>
 
-      {/* Active glow — shines LEFT toward road */}
-      <pointLight ref={glowRef} position={[-7, 8, 0]} color={c} distance={40} intensity={0.5} />
+      {/* Active glow — shines LEFT toward road. Only the current room and its
+          immediate neighbors keep a real light; the other 4-5 buildings rely on
+          <Bloom/> for their idle glow (see frame color/edge emissive above) —
+          cuts this from 7 always-on lights down to at most 3. */}
+      {isNear && <pointLight ref={glowRef} position={[-7, 8, 0]} color={c} distance={40} intensity={0.5} />}
 
       {isActive && (
         <>
@@ -601,6 +600,10 @@ const SectionBuilding = memo(function SectionBuilding({ room, isActive }) {
 // ─────────────────────────────────────────────────────────
 // CITY SKYLINE — far RIGHT (+X) of buildings
 // ─────────────────────────────────────────────────────────
+// Bodies/edge-strips/caps are each same-sized-enough to instance per color group —
+// same 16-building skyline, 3 draw calls instead of 16 groups of 4 meshes + 16 lights.
+// (Box/Cylinder geometry differs slightly per building, so bodies use a unit box/cylinder
+// scaled per-instance rather than sharing one literal geometry.)
 const CityBackground = memo(function CityBackground() {
   const bldgs = useMemo(() => {
     const cols = [PURPLE, BLUE, YELLOW];
@@ -613,23 +616,43 @@ const CityBackground = memo(function CityBackground() {
     }));
   }, []);
 
+  const byColor = useMemo(() => {
+    const groups = { [PURPLE]: [], [BLUE]: [], [YELLOW]: [] };
+    bldgs.forEach(b => groups[b.color].push(b));
+    return groups;
+  }, [bldgs]);
+
   return (
     <group>
-      {bldgs.map((b, i) => (
-        <group key={i} position={[b.x, 0, b.z]}>
-          <Box args={[b.w, b.h, 5]} position={[0, b.h/2, 0]}>
-            <meshStandardMaterial color="#02020b" metalness={0.97} roughness={0.03} />
-          </Box>
-          <Box args={[0.1, b.h, 0.1]} position={[-b.w/2, b.h/2, 2.6]}>
-            <meshStandardMaterial color={b.color} emissive={b.color} emissiveIntensity={2.5} />
-          </Box>
-          <Box args={[0.1, b.h, 0.1]} position={[b.w/2, b.h/2, 2.6]}>
-            <meshStandardMaterial color={b.color} emissive={b.color} emissiveIntensity={2.5} />
-          </Box>
-          <Cylinder args={[0.05, 0.1, b.h * 0.14, 4]} position={[0, b.h + b.h*0.07, 0]}>
-            <meshStandardMaterial color={b.color} emissive={b.color} emissiveIntensity={5} />
-          </Cylinder>
-          <pointLight position={[0, b.h+2, 0]} color={b.color} distance={28} intensity={0.9} />
+      {/* Dark bodies — one instanced draw call for all 16, unlit color so no light needed */}
+      <Instances limit={16}>
+        <boxGeometry args={[1, 1, 5]} />
+        <meshStandardMaterial color="#02020b" metalness={0.97} roughness={0.03} />
+        {bldgs.map((b, i) => (
+          <Instance key={i} position={[b.x, b.h / 2, b.z]} scale={[b.w, b.h, 1]} />
+        ))}
+      </Instances>
+
+      {/* Neon edge strips + roof caps — instanced per color, glow comes from <Bloom/> */}
+      {Object.entries(byColor).map(([color, group]) => (
+        <group key={color}>
+          <Instances limit={group.length * 2}>
+            <boxGeometry args={[0.1, 1, 0.1]} />
+            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2.5} />
+            {group.map((b, i) => (
+              <Instance key={`l${i}`} position={[b.x - b.w / 2, b.h / 2, b.z + 2.6]} scale={[1, b.h, 1]} />
+            ))}
+            {group.map((b, i) => (
+              <Instance key={`r${i}`} position={[b.x + b.w / 2, b.h / 2, b.z + 2.6]} scale={[1, b.h, 1]} />
+            ))}
+          </Instances>
+          <Instances limit={group.length}>
+            <cylinderGeometry args={[0.05, 0.1, 1, 4]} />
+            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={5} />
+            {group.map((b, i) => (
+              <Instance key={`c${i}`} position={[b.x, b.h + b.h * 0.07, b.z]} scale={[1, b.h * 0.14, 1]} />
+            ))}
+          </Instances>
         </group>
       ))}
     </group>
@@ -903,15 +926,26 @@ const sectionData = useMemo(() => {
 <CityBackground />
 
 {ROOMS.map((room, i) => (
-  <SectionBuilding key={room.id} room={room} isActive={i === currentRoom} />
+  <SectionBuilding key={room.id} room={room} isActive={i === currentRoom} isNear={Math.abs(i - currentRoom) <= 1} />
 ))}
           <Ferrari ref={carRef} targetZ={targetZ} />
           <NeonRain targetZ={targetZ} />
-          <CinematicCamera 
-  targetZ={targetZ} 
-  isTransitioning={isTransitioning} 
+          <CinematicCamera
+  targetZ={targetZ}
+  isTransitioning={isTransitioning}
   carRef={carRef}
 />
+          {/* Bloom replaces the ~54 always-on decorative point lights removed above —
+              same neon glow on every emissive surface, as one full-screen pass instead
+              of dozens of per-fragment light calculations. */}
+          <EffectComposer multisampling={0}>
+            <Bloom
+              luminanceThreshold={0.55}
+              luminanceSmoothing={0.2}
+              intensity={0.65}
+              mipmapBlur
+            />
+          </EffectComposer>
         </Suspense>
       </Canvas>
 

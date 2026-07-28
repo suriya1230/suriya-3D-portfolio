@@ -12,6 +12,7 @@
     "@emailjs/browser": "^4.4.1",
     "@react-three/drei": "^9.105.4",
     "@react-three/fiber": "^8.16.8",
+    "@react-three/postprocessing": "^2.19.1",
     "@splinetool/react-spline": "^4.1.0",
     "@splinetool/runtime": "^1.12.81",
     "clsx": "^2.1.1",
