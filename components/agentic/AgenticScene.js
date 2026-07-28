@@ -940,9 +940,9 @@ const sectionData = useMemo(() => {
               of dozens of per-fragment light calculations. */}
           <EffectComposer multisampling={0}>
             <Bloom
-              luminanceThreshold={0.55}
-              luminanceSmoothing={0.2}
-              intensity={0.65}
+              luminanceThreshold={0.75}
+              luminanceSmoothing={0.25}
+              intensity={0.35}
               mipmapBlur
             />
           </EffectComposer>
